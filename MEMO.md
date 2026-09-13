@@ -61,7 +61,7 @@ early stopping, and the test split was kept for final evaluation.
 | Test | 0.829 | 0.494 | 0.817 | 0.713 |
 
 **Interpretation:**  
-The model demonstrates strong pothole detection capabilities with a test mAP50 of 0.829, indicating it reliably finds most potholes with good confidence. The drop in mAP50-95 to 0.494 highlights that exact bounding box tightness varies, which is expected for irregularly shaped objects like potholes. The test metrics slightly outperform validation, suggesting the model generalized well without overfitting.
+The model demonstrates strong pothole detection capabilities with a test mAP50 of 0.829, indicating it reliably finds most potholes with good confidence. The drop in mAP50-95 to 0.494 highlights that exact bounding box tightness varies, which is expected for irregularly shaped objects like potholes. The test result is higher than validation on this dataset, but this does not establish hidden-set generalization or rule out distribution differences.
 
 **Limitations:**  
 These metrics measure performance on the available evaluation data and do not

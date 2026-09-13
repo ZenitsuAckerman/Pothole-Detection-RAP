@@ -299,7 +299,7 @@ Upload an image and receive structured pothole detections.
 **Request**
 ```bash
 curl -X POST "http://localhost:8000/detect" \
-  -F "file=@test_img.jpg"
+  -F "file=@path/to/image.jpg"
 ```
 **Example Response**
 ```json
@@ -308,9 +308,16 @@ curl -X POST "http://localhost:8000/detect" \
     {
       "class_name": "pothole",
       "confidence": 0.91,
-      "bbox": [120, 180, 340, 420]
+      "box": {
+        "x1": 120.0,
+        "y1": 180.0,
+        "x2": 340.0,
+        "y2": 420.0
+      }
     }
-  ]
+  ],
+  "image_width": 640,
+  "image_height": 640
 }
 ```
 
@@ -321,7 +328,7 @@ Ask a natural-language question about the uploaded image.
 ```bash
 curl -X POST \
   "http://localhost:8000/ask?question=How%20many%20potholes%20are%20there%3F" \
-  -F "file=@test_img.jpg"
+  -F "file=@path/to/image.jpg"
 ```
 **Example Response**
 ```json
@@ -331,7 +338,12 @@ curl -X POST \
     {
       "class_name": "pothole",
       "confidence": 0.91,
-      "bbox": [120, 180, 340, 420]
+      "box": {
+        "x1": 120.0,
+        "y1": 180.0,
+        "x2": 340.0,
+        "y2": 420.0
+      }
     }
   ]
 }
@@ -375,18 +387,12 @@ Key reproducibility settings include:
 
 ## 📦 Model Weights
 
-The trained `best.pt` checkpoint is distributed separately from the source repository when required due to GitHub file-size constraints. Once uploaded, reviewers can download the checkpoint using:
+The trained `best.pt` checkpoint is included directly in this repository for review.
 
-```python
-from huggingface_hub import hf_hub_download
+The weights are located precisely at:
+`training/runs/train/pothole_rtdetr/weights/best.pt`
 
-hf_hub_download(
-    repo_id="<your-username>/pothole-rtdetr",
-    filename="best.pt",
-    local_dir="weights"
-)
-```
-Then configure the API to load `weights/best.pt`.
+Ensure the FastAPI server is executed from the repository root so it can locate these weights.
 
 ## ⚙️ Engineering Decisions
 
@@ -420,7 +426,7 @@ The problem requires a lightweight decision layer rather than multi-agent orches
 | `/detect` API | ✅ Implemented |
 | `/ask` reasoning API | ✅ Implemented |
 | Confidence guardrail | ✅ Implemented |
-| Model weight publishing | ⏳ Pending final checkpoint |
+| Model weight publishing | ✅ Complete (Included) |
 
 ## 📄 License
 This project is intended as an individual technical take-home submission.
