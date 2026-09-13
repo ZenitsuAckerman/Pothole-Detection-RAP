@@ -1,0 +1,17 @@
+.env
+.env.*
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.git/
+.gitignore
+tests/
+requirements-test.txt
+Dockerfile
+.dockerignore
+evaluation/failure_cases/
+data/

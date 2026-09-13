@@ -291,6 +291,28 @@ python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
 The API will be available at: http://localhost:8000
 Interactive Swagger documentation: http://localhost:8000/docs
 
+## 🐳 Docker Deployment
+
+The application is containerized for production deployment. The Docker image packages the FastAPI server, the included `best.pt` checkpoint, and all runtime dependencies without modifying application behavior.
+
+**Build the image:**
+```bash
+docker build -t pothole-api .
+```
+
+**Run the container:**
+```bash
+docker run --rm -p 8000:8000 --env-file .env pothole-api
+```
+
+> [!IMPORTANT]
+> **API Keys:** Do not bake `GROQ_API_KEY` into the image. It must be provided at runtime via `--env-file .env` or `-e GROQ_API_KEY=your_key`.
+
+The container exposes the following endpoints on port 8000:
+- `GET /health`
+- `POST /detect`
+- `POST /ask`
+
 ## 📡 API
 
 ### `POST /detect`
