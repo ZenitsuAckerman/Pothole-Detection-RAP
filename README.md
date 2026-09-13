@@ -64,146 +64,140 @@ The system is intentionally implemented without agentic frameworks such as LangC
                    └─────────┬─────────┘
                              ▼
                        API Response
+```
 
-🎯 Key Features
-RT-DETR-L fine-tuned for pothole detection
-Domain-specific non-COCO detection class: pothole
-Roboflow-sourced dataset
-FastAPI inference service
-Structured detection responses
-Bounding boxes and confidence scores
-Natural-language image questions
-Hand-written deterministic intent routing
-Groq-powered reasoning over structured CV evidence
-Confidence-based reasoning guardrail
-Explicit insufficient information behavior
-Automatic failure-case mining
-Reproducible training configuration
-No LangChain / LangGraph / CrewAI / AutoGen
-Model weights can be distributed separately from source code
+## 🎯 Key Features
+- **RT-DETR-L** fine-tuned for pothole detection
+- **Domain-specific non-COCO detection class:** `pothole`
+- **Roboflow-sourced dataset**
+- **FastAPI inference service**
+- **Structured detection responses**
+- Bounding boxes and confidence scores
+- **Natural-language image questions**
+- **Hand-written deterministic intent routing**
+- **Groq-powered reasoning over structured CV evidence** (`openai/gpt-oss-120b`)
+- **Confidence-based reasoning guardrail**
+- Explicit insufficient information behavior
+- Automatic failure-case mining
+- Reproducible training configuration
+- No LangChain / LangGraph / CrewAI / AutoGen
+- Model weights can be distributed separately from source code
 
-Architecture Note: The dataset uses YOLO-format annotation files (data.yaml + .txt bounding-box labels) because this is the export convention used by Roboflow and consumed by the Ultralytics training pipeline. The actual detector is RT-DETR-L, not a YOLO architecture.
+> **Architecture Note:** The dataset uses YOLO-format annotation files (`data.yaml` + `.txt` bounding-box labels) because this is the export convention used by Roboflow and consumed by the Ultralytics training pipeline. The actual detector is **RT-DETR-L**, not a YOLO architecture.
 
-✅ Problem Statement Compliance
-Requirement	Implementation
-RT-DETR object detector	RT-DETR-L fine-tuned using Ultralytics
-Non-COCO class	pothole
-Custom domain dataset	Roboflow pothole detection dataset
-Train / Validation / Test	Dataset split provided by the dataset
-Object detection API	POST /detect
-Natural-language reasoning	POST /ask
-Intent routing	Hand-written decision layer
-Structured reasoning	Reasoning operates over detector output
-Confidence guardrail	Explicit insufficient-information behavior
-Agentic frameworks	None
-AutoML / No-Code	None
-Reproducibility	Fixed seed and documented training configuration
-Failure analysis	Automated failure-case mining + manual analysis
-📊 Evaluation Results
+## ✅ Problem Statement Compliance
+| Requirement | Implementation |
+|---|---|
+| RT-DETR object detector | RT-DETR-L fine-tuned using Ultralytics |
+| Non-COCO class | `pothole` |
+| Custom domain dataset | Roboflow pothole detection dataset |
+| Train / Validation / Test | Dataset split provided by the dataset |
+| Object detection API | `POST /detect` |
+| Natural-language reasoning | `POST /ask` |
+| Intent routing | Hand-written decision layer |
+| Structured reasoning | Reasoning operates over detector output |
+| Confidence guardrail | Explicit insufficient-information behavior |
+| Agentic frameworks | None |
+| AutoML / No-Code | None |
+| Reproducibility | Fixed seed and documented training configuration |
+| Failure analysis | Automated failure-case mining + manual analysis |
 
-Results will be updated with the final test-set measurements after training and evaluation. No metrics are fabricated or estimated.
+## 📊 Evaluation Results
 
-Metric	Result
-mAP@50	Pending
-mAP@50-95	Pending
-Precision	Pending
-Recall	Pending
-Test Images	Pending
-Training Duration	Pending
+| Metric | Result |
+|---|---|
+| mAP@50 | **0.829** |
+| mAP@50-95 | **0.494** |
+| Precision | **0.817** |
+| Recall | **0.713** |
+| Test Images | 67 |
+| Training Duration | ~25.8 minutes |
 
 The evaluation pipeline reports detection performance on the held-out test split and is also used to identify representative failure cases.
 
-🔬 Dataset
+## 🔬 Dataset
 
-The project uses a pothole detection dataset sourced from Roboflow Universe.
+The project uses a pothole detection dataset sourced from Roboflow Universe (`yolo-sfvlm/pothole-detection-using-yolov5-p20qq`).
 
-Dataset Characteristics
-Domain: Road / pothole detection
-Target class: pothole
-Annotation format: YOLO
-Images are divided into training, validation, and test splits
-Bounding-box annotations are used for object detection
+**Dataset Characteristics**
+- **Domain:** Road / pothole detection
+- **Target class:** `pothole`
+- **Annotation format:** YOLO
+- Images are divided into training, validation, and test splits (465 train, 133 valid, 67 test)
+- Bounding-box annotations are used for object detection
 
 Dataset acquisition is reproducible through:
 
+```bash
 python scripts/fetch_dataset.py
+```
 
 The dataset source and version are documented in the project configuration and memo.
 
-🧠 Model
+## 🧠 Model
 
-The detector uses RT-DETR-L (Real-Time Detection Transformer - Large).
+The detector uses **RT-DETR-L** (Real-Time Detection Transformer - Large).
 
+```python
 from ultralytics import RTDETR
-
 model = RTDETR("rtdetr-l.pt")
+```
 
 RT-DETR was selected because the task requires an object detector capable of handling varying pothole sizes and visual conditions while providing direct bounding-box predictions.
 
-Training Configuration
-Parameter	Configuration
-Model	RT-DETR-L
-Image Size	640 × 640
-Epochs	30
-Batch Size	16 target configuration
-Optimizer	AdamW / Ultralytics configuration
-Seed	42
-Deterministic	Yes
-Mixed Precision	AMP
-Augmentation	Moderate
-Dataset	Roboflow Pothole Detection
+**Training Configuration**
+| Parameter | Configuration |
+|---|---|
+| Model | RT-DETR-L |
+| Image Size | 640 × 640 |
+| Epochs | 30 |
+| Batch Size | 8 |
+| Optimizer | AdamW / Ultralytics configuration |
+| Seed | 42 |
+| Deterministic | Yes |
+| Hardware | Tesla T4 (Kaggle) |
 
 Training is performed using:
 
+```bash
 python training/train.py
+```
 
-The best checkpoint is saved under the training run's weights/best.pt.
+The best checkpoint is saved under the training run's `weights/best.pt`.
 
-🔍 Evaluation & Failure Analysis
+## 🔍 Evaluation & Failure Analysis
 
 Evaluation is performed using:
 
+```bash
 python evaluation/eval.py
+```
 
 The evaluation pipeline measures:
-
-mAP@50
-mAP@50-95
-Precision
-Recall
-Confusion behavior
-Detection confidence
+- mAP@50
+- mAP@50-95
+- Precision
+- Recall
+- Confusion behavior
+- Detection confidence
 
 It also mines representative failure cases including:
+- False positives
+- False negatives
+- Low-confidence detections
 
-False positives
-False negatives
-Low-confidence detections
+These cases are used for qualitative root-cause analysis rather than hiding model weaknesses. See `MEMO.md` for the analysis of the 5 specific failure cases identified.
 
-These cases are used for qualitative root-cause analysis rather than hiding model weaknesses.
+## 🤖 Part B — Natural Language Reasoning
 
-Failure Analysis
-
-The final submission documents at least five representative failure cases and analyzes causes such as:
-
-Very small or distant potholes
-Partial occlusion
-Poor lighting
-Road-surface ambiguity
-Low-confidence detections
-
-The goal is not only to report the strongest metric, but to understand where the detector fails and why.
-
-🤖 Part B — Natural Language Reasoning
-
-The /ask endpoint allows users to ask natural-language questions about an uploaded image.
+The `/ask` endpoint allows users to ask natural-language questions about an uploaded image.
 
 Example:
-
-"How many potholes are there?"
+**"How many potholes are there?"**
 
 The request passes through a simple hand-written intent router.
 
+```text
 User Question
       │
       ▼
@@ -227,11 +221,11 @@ Intent Router
                  │
                  ▼
              Final Answer
+```
 
-The reasoning model does not directly perform object detection.
+The reasoning model does not directly perform object detection. Instead, it receives structured evidence such as:
 
-Instead, it receives structured evidence such as:
-
+```json
 {
   "detections": [
     {
@@ -242,112 +236,73 @@ Instead, it receives structured evidence such as:
   ],
   "count": 1
 }
+```
 
 This keeps the computer-vision decision separate from the language reasoning layer.
 
-🛡️ Confidence Guardrail
+### 🛡️ Confidence Guardrail
 
-The reasoning layer includes a confidence-based guardrail.
+The reasoning layer includes a confidence-based guardrail. If the detector does not provide sufficient evidence to confidently answer a visual question, the system does not invent an answer. Instead, it explicitly reports that the available visual evidence is insufficient.
 
-If the detector does not provide sufficient evidence to confidently answer a visual question, the system does not invent an answer.
-
-Instead, it explicitly reports that the available visual evidence is insufficient.
-
-Example:
-
-Question:
-"Is there definitely a pothole in the image?"
+**Example:**
+Question: *"How deep is this pothole?"*
 
 If detector evidence is insufficient:
-
-Answer:
-"Insufficient information from the available visual evidence."
+Answer: *"Insufficient information: this model only detects pothole presence and location, not attributes like depth, age, or cause."*
 
 This prevents the LLM from hallucinating visual information that was not supported by the detector.
 
-🚀 Quickstart
-1. Clone the Repository
+## 🚀 Quickstart
+
+**1. Clone the Repository**
+```bash
 git clone https://github.com/ZenitsuAckerman/Pothole-Detection-RAP.git
 cd Pothole-Detection-RAP
-2. Create a Virtual Environment
+```
+
+**2. Create a Virtual Environment**
+```bash
 python -m venv .venv
-Linux / macOS
 source .venv/bin/activate
-Windows
-.venv\Scripts\activate
-3. Install Dependencies
+```
+
+**3. Install Dependencies**
+```bash
 pip install -r requirements.txt
-4. Configure Environment Variables
+```
 
-Create a .env file from the provided template:
-
+**4. Configure Environment Variables**
+Create a `.env` file from the provided template:
+```bash
 cp .env.example .env
+```
+Configure your `ROBOFLOW_API_KEY` and `GROQ_API_KEY`. Never commit `.env` or API keys to the repository.
 
-Configure:
-
-ROBOFLOW_API_KEY=your_roboflow_key
-GROQ_API_KEY=your_groq_key
-
-Never commit .env or API keys to the repository.
-
-📥 Dataset Preparation
-
-Download the dataset:
-
+**5. Download Dataset**
+```bash
 python scripts/fetch_dataset.py
+```
 
-The downloaded dataset is expected under:
-
-data/
-├── train/
-├── valid/
-├── test/
-└── data.yaml
-🏋️ Training
-
-Training requires a CUDA-capable GPU.
-
-python training/train.py
-
-The training pipeline uses a fixed random seed and deterministic configuration to improve reproducibility.
-
-After training, locate:
-
-weights/
-└── best.pt
-
-or the corresponding best.pt inside the generated training run.
-
-📈 Evaluation
-
-Run:
-
-python evaluation/eval.py
-
-This evaluates the trained detector on the test split and generates evaluation artifacts and failure cases.
-
-🌐 Running the API
-
+**6. Run FastAPI**
 Start the FastAPI application:
+```bash
+python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+```
+The API will be available at: http://localhost:8000
+Interactive Swagger documentation: http://localhost:8000/docs
 
-python -m api.main
+## 📡 API
 
-The API will be available at:
-
-http://localhost:8000
-
-Interactive Swagger documentation:
-
-http://localhost:8000/docs
-📡 API
-POST /detect
-
+### `POST /detect`
 Upload an image and receive structured pothole detections.
 
-Request
+**Request**
+```bash
 curl -X POST "http://localhost:8000/detect" \
-  -F "file=@sample.jpg"
-Example Response
+  -F "file=@test_img.jpg"
+```
+**Example Response**
+```json
 {
   "detections": [
     {
@@ -357,15 +312,19 @@ Example Response
     }
   ]
 }
-POST /ask
+```
 
+### `POST /ask`
 Ask a natural-language question about the uploaded image.
 
-Request
+**Request**
+```bash
 curl -X POST \
   "http://localhost:8000/ask?question=How%20many%20potholes%20are%20there%3F" \
-  -F "file=@sample.jpg"
-Example Response
+  -F "file=@test_img.jpg"
+```
+**Example Response**
+```json
 {
   "answer": "The image contains 1 detected pothole.",
   "detections": [
@@ -376,40 +335,13 @@ Example Response
     }
   ]
 }
+```
 
-Response fields may vary slightly depending on the current API schema.
-
-📂 Repository Structure
-Pothole-Detection-RAP/
-│
-├── api/
-│   ├── main.py
-│   └── ...
-│
-├── training/
-│   └── train.py
-│
-├── evaluation/
-│   ├── eval.py
-│   └── failure_cases/
-│
-├── data/
-│   └── data.yaml
-│
-├── scripts/
-│   ├── fetch_dataset.py
-│   └── upload_weights.py
-│
-├── .env.example
-├── .gitignore
-├── MEMO.md
-├── README.md
-├── requirements.txt
-└── Dockerfile
-🔁 Reproducibility
+## 🔁 Reproducibility
 
 The project is designed so that another developer can reproduce the complete pipeline:
 
+```text
 Install Dependencies
         │
         ▼
@@ -429,23 +361,23 @@ Load best.pt
         │
         ▼
 Run FastAPI
+```
 
 Key reproducibility settings include:
+- Fixed seed: 42
+- Deterministic training
+- Explicit image size
+- Explicit epoch count
+- Documented dataset source/version
+- Defined training script
+- Defined evaluation script
+- Environment variable based API configuration
 
-Fixed seed: 42
-Deterministic training
-Explicit image size
-Explicit epoch count
-Documented dataset source/version
-Defined training script
-Defined evaluation script
-Environment variable based API configuration
-📦 Model Weights
+## 📦 Model Weights
 
-The trained best.pt checkpoint is distributed separately from the source repository when required due to GitHub file-size constraints.
+The trained `best.pt` checkpoint is distributed separately from the source repository when required due to GitHub file-size constraints. Once uploaded, reviewers can download the checkpoint using:
 
-Once uploaded, reviewers can download the checkpoint using:
-
+```python
 from huggingface_hub import hf_hub_download
 
 hf_hub_download(
@@ -453,73 +385,42 @@ hf_hub_download(
     filename="best.pt",
     local_dir="weights"
 )
+```
+Then configure the API to load `weights/best.pt`.
 
-Then configure the API to load:
+## ⚙️ Engineering Decisions
 
-weights/best.pt
-⚙️ Engineering Decisions
-Why RT-DETR?
-
+**Why RT-DETR?**
 RT-DETR provides a transformer-based object detection architecture suitable for real-time detection while avoiding reliance on a YOLO detector.
 
-Why a separate reasoning layer?
+**Why a separate reasoning layer?**
+The LLM is intentionally separated from visual detection. RT-DETR answers: "What objects were detected and where?" The reasoning layer answers: "What does this structured evidence imply for the user's question?" This separation makes the system easier to inspect, test, and reason about.
 
-The LLM is intentionally separated from visual detection.
+**Why no agentic framework?**
+The problem requires a lightweight decision layer rather than multi-agent orchestration. Therefore the system uses a Hand-Written Intent Router -> RT-DETR -> Structured Evidence -> Groq Reasoning with no LangChain, LangGraph, CrewAI, AutoGen, or similar agentic framework.
 
-RT-DETR answers:
+## 🔐 Security & Reliability
+- API keys are stored through environment variables.
+- Secrets are excluded from version control.
+- Uploaded images are processed through the API inference pipeline.
+- LLM reasoning is grounded in structured detector output.
+- Low-confidence evidence triggers the insufficient-information guardrail.
+- The detector and reasoning layers remain independently testable.
 
-"What objects were detected and where?"
+## 📌 Current Project Status
 
-The reasoning layer answers:
+| Component | Status |
+|---|---|
+| Dataset sourcing | ✅ Complete |
+| Dataset preparation | ✅ Complete |
+| RT-DETR training pipeline | ✅ Complete |
+| RT-DETR training | ✅ Complete |
+| Test evaluation | ✅ Complete |
+| Failure-case analysis | ✅ Complete |
+| `/detect` API | ✅ Implemented |
+| `/ask` reasoning API | ✅ Implemented |
+| Confidence guardrail | ✅ Implemented |
+| Model weight publishing | ⏳ Pending final checkpoint |
 
-"What does this structured evidence imply for the user's question?"
-
-This separation makes the system easier to inspect, test, and reason about.
-
-Why no agentic framework?
-
-The problem requires a lightweight decision layer rather than multi-agent orchestration.
-
-Therefore the system uses:
-
-Hand-Written Intent Router
-          ↓
-RT-DETR
-          ↓
-Structured Evidence
-          ↓
-Groq Reasoning
-
-with no LangChain, LangGraph, CrewAI, AutoGen, or similar agentic framework.
-
-🔐 Security & Reliability
-API keys are stored through environment variables.
-Secrets are excluded from version control.
-Uploaded images are processed through the API inference pipeline.
-LLM reasoning is grounded in structured detector output.
-Low-confidence evidence triggers the insufficient-information guardrail.
-The detector and reasoning layers remain independently testable.
-📌 Current Project Status
-Component	Status
-Dataset sourcing	✅ Complete
-Dataset preparation	✅ Complete
-RT-DETR training pipeline	✅ Complete
-RT-DETR training	🔄 Running
-Test evaluation	⏳ Pending training
-Failure-case analysis	⏳ Pending evaluation
-/detect API	✅ Implemented
-/ask reasoning API	✅ Implemented
-Confidence guardrail	✅ Implemented
-Model weight publishing	⏳ Pending final checkpoint
-Final metrics	⏳ Pending evaluation
-👤 Author
-
-Rahul S
-
-Computer Vision & Applied ML Engineering
-
-GitHub: @ZenitsuAckerman
-
-📄 License
-
+## 📄 License
 This project is intended as an individual technical take-home submission.

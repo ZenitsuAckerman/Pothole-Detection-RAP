@@ -4,7 +4,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 logger = logging.getLogger("pothole-api")
 client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 # Bounded retries: max 3 attempts, short exponential backoff (1s, 2s, 4s cap).
 # Deliberately NOT unbounded — a live verbal-defense demo can't afford a request
@@ -21,7 +21,7 @@ def _call_groq(prompt: str, max_tokens: int, json_mode: bool):
         model=MODEL,
         max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
-        timeout=5,
+        timeout=10,
         **kwargs,
     )
     return resp.choices[0].message.content

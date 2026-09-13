@@ -5,13 +5,14 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse
 from .detector import Detector
 from .schemas import DetectionResponse, ErrorResponse
-from .reasoning import answer_question
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+
+from .reasoning import answer_question
 
 # Set up structured logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

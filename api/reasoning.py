@@ -6,7 +6,7 @@ from .llm_client import call_llm
 logger = logging.getLogger("pothole-api")
 
 CONF_GUARDRAIL_THRESHOLD = float(os.getenv("CONF_GUARDRAIL_THRESHOLD", 0.4))
-OUT_OF_SCOPE_KEYWORDS = ["depth", "how old", "cause", "when was", "material", "brand"]
+OUT_OF_SCOPE_KEYWORDS = ["depth", "deep", "how old", "cause", "when was", "material", "brand"]
 DETECTION_KEYWORDS = ["how many", "is there", "count", "safe", "visible",
                       "present", "any pothole", "damage", "potholes"]
 
@@ -28,7 +28,7 @@ def intent_router(question: str) -> bool:
         'Respond with ONLY valid JSON containing a single boolean key: {"needs_detection": true} or {"needs_detection": false}'
     )
     
-    raw = call_llm(prompt, max_tokens=30, json_mode=True)
+    raw = call_llm(prompt, max_tokens=300, json_mode=True)
     
     if raw is None:
         # LLM failure -> fail safe toward running detection rather than guessing blind
