@@ -125,6 +125,7 @@ The project uses a pothole detection dataset sourced from Roboflow Universe (`yo
 - **Annotation format:** YOLO
 - Images are divided into training, validation, and test splits (465 train, 133 valid, 67 test)
 - Bounding-box annotations are used for object detection
+- Training was performed on the full dataset without `--exclude-small-boxes` to evaluate true model limits
 
 Dataset acquisition is reproducible through:
 
@@ -148,14 +149,31 @@ RT-DETR was selected because the task requires an object detector capable of han
 **Training Configuration**
 | Parameter | Configuration |
 |---|---|
+| Python | 3.13.15 |
+| PyTorch | 2.11.0+cu128 |
+| Ultralytics | 8.4.150 |
+| Hardware | NVIDIA Tesla T4 |
+| CUDA | 12.8 |
+| Training time | ~25.8 minutes |
 | Model | RT-DETR-L |
-| Image Size | 640 × 640 |
 | Epochs | 30 |
+| Image Size | 640 |
 | Batch Size | 8 |
-| Optimizer | AdamW / Ultralytics configuration |
+| Optimizer | `auto` → AdamW |
+| Learning rate | 0.002 |
 | Seed | 42 |
-| Deterministic | Yes |
-| Hardware | Tesla T4 (Kaggle) |
+| Deterministic | True |
+| AMP | enabled |
+| Patience | 15 |
+| Mosaic | 0.5 |
+| Close mosaic | 10 |
+| Mixup | 0.0 |
+| HSV-H | 0.015 |
+| HSV-S | 0.5 |
+| HSV-V | 0.3 |
+| Degrees | 5.0 |
+| Translate | 0.1 |
+| Scale | 0.3 |
 
 Training is performed using:
 

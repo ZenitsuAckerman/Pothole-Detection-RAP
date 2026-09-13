@@ -19,7 +19,7 @@ Roboflow Universe — yolo-sfvlm/pothole-detection-using-yolov5-p20qq version 2
 - Non-COCO class requirement: satisfied because `pothole` is not a standard COCO class.
 
 **Dataset preparation:**  
-We maintained the original dataset images and labels without removing any boxes. We initially considered filtering bounding boxes below 0.1% area but decided against it to maintain the integrity of the test set and evaluate true model limits.
+Training was performed on the full dataset without `--exclude-small-boxes`. We initially considered filtering bounding boxes below 0.1% area but decided against it to maintain the integrity of the test set and evaluate true model limits.
 
 ---
 
@@ -40,14 +40,30 @@ early stopping, and the test split was kept for final evaluation.
 
 | Parameter | Actual value |
 |---|---|
+| Python | 3.13.15 |
+| PyTorch | 2.11.0+cu128 |
+| Ultralytics | 8.4.150 |
+| Hardware | NVIDIA Tesla T4 |
+| CUDA | 12.8 |
+| Training time | ~25.8 minutes |
 | Epochs | 30 |
 | Image size | 640 |
 | Batch size | 8 |
-| Optimizer | `auto` → AdamW (lr 0.002, momentum 0.9) |
+| Optimizer | `auto` → AdamW |
+| Learning rate | 0.002 |
 | Seed | 42 |
 | Deterministic | True |
-| Hardware | Tesla T4 |
-| Training time | ~25.8 minutes |
+| AMP | enabled |
+| Patience | 15 |
+| Mosaic | 0.5 |
+| Close mosaic | 10 |
+| Mixup | 0.0 |
+| HSV-H | 0.015 |
+| HSV-S | 0.5 |
+| HSV-V | 0.3 |
+| Degrees | 5.0 |
+| Translate | 0.1 |
+| Scale | 0.3 |
 
 ---
 
@@ -91,7 +107,7 @@ from the analysis.
 
 ## 5. Part B — Minimal Reasoning Layer
 
-The `/ask` endpoint uses a single hand-written decision layer utilizing Groq's `openai/gpt-oss-120b` running in native JSON mode for reasoning. If the Groq API times out, the code gracefully degrades to returning raw detection statistics rather than crashing.
+The `/ask` endpoint uses a single hand-written decision layer utilizing Groq's `openai/gpt-oss-120b`. JSON mode is used for the ambiguous-question intent-routing call. The structured reasoner receives detector evidence and produces the final plain-language response. If the Groq API times out, the code gracefully degrades to returning raw detection statistics rather than crashing.
 
 **Routing:**
 
