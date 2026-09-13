@@ -1,41 +1,135 @@
-# Problem Statement Memo: Pothole Detection & Reasoning API
+# Pothole Detection & Reasoning API
+### Technical Screening Memo
 
 ## 1. Domain & Dataset
-- **Domain:** Road Infrastructure Safety / Pothole Detection
-- **Source:** Roboflow Universe (`yolo-sfvlm/pothole-detection-using-yolov5-p20qq`)
-- **License:** MIT
-- **Justification:** I selected "potholes" because it is a vital real-world CV application (preventing vehicle damage and accidents) and strictly satisfies the constraint of being a non-COCO class.
-- **Architecture Note:** Dataset labels are stored in YOLO-format annotation files (`data.yaml` + `.txt` boxes) because that is the export convention Roboflow and Ultralytics share across all detectors. The model trained is RT-DETR (`ultralytics.RTDETR("rtdetr-l.pt")`, a transformer-based detector), not a YOLO architecture. Some source dataset titles contain "yolo" in the name because that's what the original uploader exported for — this refers only to the label file format, not the model used here.
 
-## 2. Dataset Curation & Scope Limitation
-- Excluded N boxes < 0.1% area — this is a stated scope limitation, not a quality claim. See failure case #4 for how the model behaves on this excluded range.
-- **Honesty/Trade-off:** We excluded N boxes under 0.1% image area from the primary training run because inspection showed several were likely mislabeled. This is a real scope limitation: our reported metrics do not reflect performance on very small/distant potholes, and we treat this as one of our five failure cases below, not as a quality improvement.
+**Domain:** Road Infrastructure Safety — Pothole Detection
 
-## 3. Split Strategy
-- We maintained the original train/val/test split provided by the dataset author (Train: X%, Val: Y%, Test: Z%). 
-- We evaluated the model specifically on the **test split** for our final reported metrics to ensure the numbers reflect genuine generalization, strictly separating them from the `val` split which was used for early stopping (patience=15).
+**Why this domain:**  
+Potholes are a practical road-safety and infrastructure-maintenance problem where
+localized object detection can support automated road inspection.
 
-## 4. Evaluation Metrics
-*Metrics computed via `evaluation/eval.py`.*
-- **Val mAP50/50-95 (tuning signal):** from `val_metrics.json`
-- **Test mAP50/50-95 (headline, honest proxy for hidden set):** from `test_metrics.json`
-- **Gap between val and test:** [discuss what it implies about hidden-set risk, e.g., slightly lower test metrics indicate the val set was easier and the hidden set may be tougher still.]
+**Dataset source:**  
+Roboflow Universe — [exact project/version]
 
-## 5. Five Failure Cases
-*(Mined automatically from test split — see `evaluation/failure_cases/`)*
-1. **False Positive (Shadow/Stain):** [Root Cause - e.g. model confused dark patch for pothole]
-2. **False Negative (Water-filled):** [Root Cause - e.g. glare destroyed texture]
-3. **Low-confidence borderline:** [Root Cause - e.g. partially occluded by tire]
-4. **Small/distant pothole (from excluded-box population):** [Root Cause - falls outside trained scale distribution because we excluded < 0.1% area boxes]
-5. **Class confusion (Crack vs Pothole) / blur / lighting:** [whichever test-split example is worst]
+**Dataset composition:**  
+- Images: [final count]
+- Class: `pothole`
+- Annotation format: YOLO bounding boxes
+- Non-COCO class requirement: satisfied because `pothole` is not a standard COCO class.
 
-## 6. Part B — Reasoning Layer
-Our reasoning layer utilizes Groq's `llama-3.3-70b-versatile` running in native JSON mode for intent routing. 
-- **Routing:** A rule-based regex catches obvious queries. Ambiguous queries trigger the LLM to output `{"needs_detection": bool}`. 
-- **Fail-Safe:** If the Groq API times out, the code gracefully degrades to returning raw detection statistics rather than crashing with a 500 error.
+**Dataset preparation:**  
+[Exactly what we actually did — no invented curation.]
 
-### Insufficient Info Example
-*Pulled from actual guardrail logs at `evaluation/reasoning_logs.txt`:*
-- **Query:** "How deep is this pothole?" 
-- **Guardrail:** `out_of_scope` guardrail triggered.
-- **Result:** "Insufficient information: this model only detects pothole presence and location, not attributes like depth, age, or cause."
+---
+
+## 2. Split Strategy & Training
+
+**Split:**  
+- Train: [X]
+- Validation: [Y]
+- Test: [Z]
+
+**Justification:**  
+The training split was used for model fitting, validation for model selection/
+early stopping, and the test split was kept for final evaluation.
+
+**Model:** RT-DETR-L (`ultralytics.RTDETR`)
+
+**Training configuration:**
+
+| Parameter | Actual value |
+|---|---|
+| Epochs | 30 |
+| Image size | 640 |
+| Batch size | 8 |
+| Optimizer | `auto` → AdamW |
+| Learning rate | 0.002 selected by optimizer |
+| Seed | 42 |
+| Deterministic | True |
+| Hardware | Tesla T4 |
+| Training time | [actual time] |
+
+---
+
+## 3. Evaluation & Interpretation
+
+### Results
+
+| Split | mAP50 | mAP50-95 | Precision | Recall |
+|---|---:|---:|---:|---:|
+| Validation | [ ] | [ ] | [ ] | [ ] |
+| Test | [ ] | [ ] | [ ] | [ ] |
+
+**Interpretation:**  
+[2–4 sentences explaining what the metrics indicate.]
+
+**Limitations:**  
+These metrics measure performance on the available evaluation data and do not
+guarantee performance on the private hidden evaluation set. In particular,
+performance can degrade under changes in lighting, scale, blur, occlusion,
+road appearance, or other distribution shifts.
+
+**Confusion behavior:**  
+[Actual observations from predictions/confusion analysis.]
+
+---
+
+## 4. Five Failure Cases
+
+| # | Failure | Root cause |
+|---|---|---|
+| 1 | [actual example] | [actual reason] |
+| 2 | [actual example] | [actual reason] |
+| 3 | [actual example] | [actual reason] |
+| 4 | [actual example] | [actual reason] |
+| 5 | [actual example] | [actual reason] |
+
+These failures demonstrate the model's limitations rather than being excluded
+from the analysis.
+
+---
+
+## 5. Part B — Minimal Reasoning Layer
+
+The `/ask` endpoint uses a single hand-written decision layer.
+
+**Routing:**
+
+1. Determine whether the question requires image detection.
+2. If not required, answer without invoking RT-DETR.
+3. If required, run RT-DETR.
+4. Pass structured detections (classes, counts, boxes, confidence) to the
+   reasoning layer.
+5. Apply the confidence/out-of-scope guardrails before producing the answer.
+
+**Insufficient-information example:**
+
+**Question:** "[actual question]"
+
+**Result:**  
+"[actual insufficient-information response]"
+
+This prevents the reasoning layer from inventing information that the detector
+cannot establish.
+
+---
+
+## 6. API
+
+### `/detect`
+
+Accepts an image and returns detected objects, bounding boxes, and confidence
+scores.
+
+**Request:** [sample]
+
+**Response:** [actual sample]
+
+### `/ask`
+
+Accepts an image and natural-language question.
+
+**Request:** [sample]
+
+**Response:** [actual sample]
