@@ -1,0 +1,7 @@
+data/
+runs/
+training/runs/
+weights/*.pt
+.env
+__pycache__/
+evaluation/failure_cases/
